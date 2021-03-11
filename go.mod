@@ -1,4 +1,4 @@
-module github.com/rmoff/ksqldb-go
+module github.com/mbeauv/ksqldb-go
 
 go 1.13
 
