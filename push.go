@@ -14,6 +14,31 @@ import (
 	"golang.org/x/net/http2"
 )
 
+func buildProps(props map[string]string) string {
+	var retVal string
+	for key, val := range props {
+		if retVal != "" {
+			retVal = retVal + ","
+		}
+		retVal = retVal + fmt.Sprintf("\"%s\":\"%s\"", key, val)
+	}
+	return retVal
+}
+
+// PushFromEarliest is a continuous query that starts from the start of the stream.
+func (cl *Client) PushFromEarliest(ctx context.Context, q string, rc chan<- Row, hc chan<- Header) (err error) {
+	p := make(map[string]string)
+	p["ksql.streams.auto.offset.reset"] = "earliest"
+	return cl.Push(ctx, q, rc, hc, p)
+}
+
+// PushFromLatest is a continuous query that starts from the end of the stream.
+func (cl *Client) PushFromLatest(ctx context.Context, q string, rc chan<- Row, hc chan<- Header) (err error) {
+	p := make(map[string]string)
+	p["ksql.streams.auto.offset.reset"] = "latest"
+	return cl.Push(ctx, q, rc, hc, p)
+}
+
 // Push queries are continuous queries in which new events
 // or changes to a table's state are pushed to the client.
 // You can think of them as subscribing to a stream of changes.
@@ -39,9 +64,9 @@ import (
 // 			if row != nil {
 //				DATA_TS = row[0].(float64)
 // 				ID = row[1].(string)
-func (cl *Client) Push(ctx context.Context, q string, rc chan<- Row, hc chan<- Header) (err error) {
+func (cl *Client) Push(ctx context.Context, q string, rc chan<- Row, hc chan<- Header, p map[string]string) (err error) {
 
-	payload := strings.NewReader("{\"properties\":{\"ksql.streams.auto.offset.reset\": \"latest\"},\"sql\":\"" + q + "\"}")
+	payload := strings.NewReader("{\"properties\":{" + buildProps(p) + "},\"sql\":\"" + q + "\"}")
 	req, err := http.NewRequestWithContext(ctx, "POST", cl.url+"/query-stream", payload)
 	if err != nil {
 		return err
