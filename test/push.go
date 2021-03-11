@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rmoff/ksqldb-go"
+	"github.com/mbeauv/ksqldb-go"
 )
 
 func getDogUpdates(client *ksqldb.Client) (err error) {
